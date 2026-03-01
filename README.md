@@ -53,8 +53,6 @@ Il progetto utilizza un **server Flask** per esporre un'API RESTful che consente
   ```bash
   pip install Flask requests icalendar
 
-  Assicurati che AutoHotkey sia installato sul PC e che il percorso AHK_SCRIPT punti al file .ahk corretto.
-
 2. Impostazione del tablet
 
 Installa Fully Kiosk Browser sul tablet Android.
