@@ -52,6 +52,7 @@ Il progetto utilizza un **server Flask** per esporre un'API RESTful che consente
 - Installa le librerie necessarie con:
   ```bash
   pip install Flask requests icalendar
+   ```
 
 2. Impostazione del tablet
 
@@ -65,8 +66,11 @@ Imposta il tablet in modalità kiosk per fare in modo che l'interfaccia non veng
 
 Avvia il server Flask:
 
+ ```bash
 python server.py
-4. Uso
+ ```
+
+### 4. Uso
 
 Una volta che il server è in esecuzione, apri l'interfaccia sul tablet.
 
