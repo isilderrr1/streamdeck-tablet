@@ -2,6 +2,8 @@
 
 Questo progetto crea un **stream deck personalizzato** utilizzando un tablet Android come interfaccia per controllare azioni specifiche su un PC. Utilizza **AutoHotkey** per eseguire macro personalizzate (come aprire applicazioni su schermi specifici) e un **server Flask** per gestire la comunicazione tra il tablet e il PC.
 
+![Configurazione](/setup.jpeg)
+
 ## Funzionalità
 
 - **Controllo delle applicazioni**: Premi i tasti per eseguire azioni come aprire **Terminale**, **VS Code**, **YouTube**, **Discord**, ecc., su schermi specifici del tuo PC.
