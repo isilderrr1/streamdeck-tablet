@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f1115">
+
+  <title>Desk Panel</title>
+
+  <!-- Librerie locali (LAN-friendly, compatibili con tablet vecchi) -->
+  <link rel="stylesheet" href="/static/vendor/fullcalendar.min.css"/>
+
+  <script src="/static/vendor/jquery-2.2.4.min.js"></script>
+  <script src="/static/vendor/moment.min.js"></script>
+  <script src="/static/vendor/fullcalendar.min.js"></script>
+  <script src="/static/vendor/it.js"></script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .wrap { height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header: ora + data + stato */
+    .header {
+      padding: 10px 10px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .clock { font-size: 34px; font-weight: 800; }
+    .date { font-size: 13px; opacity: .75; margin-top: -6px; }
+    .status { font-size: 13px; opacity: .75; }
+
+    /* ✅ RIGA SOPRA: tiles (solo tasti) */
+    .toprow{
+      padding: 10px 10px 0 10px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    /* Tasti: tile quadrati, wrap */
+    .tiles {
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      align-content: flex-start;
+      flex: 1;
+      min-width: 0;
+      justify-content: center; /* ✅ più bello in verticale */
+    }
+
+    .icon-btn {
+      width: 100px;
+      height: 100px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      background: #f4f4f4;
+      padding: 0;
+      margin: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    }
+
+    .icon-btn img {
+      width: 55px;
+      height: 55px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    /* Calendario: sotto, occupa tutto lo spazio rimanente */
+    .calendar-area {
+      padding: 10px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #calendar {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* ===== DARK MODE ===== */
+    body.dark {
+      background: #0f1115;
+      color: #e8eaf0;
+    }
+
+    body.dark .icon-btn {
+      background: #1a1f2a;
+      border: 1px solid #2a3140;
+    }
+
+    body.dark .icon-btn:active {
+      background: #232b3a;
+    }
+
+    body.dark .status,
+    body.dark .date {
+      opacity: 0.85;
+    }
+
+    /* Calendario (FullCalendar v3) */
+    body.dark .fc {
+      background: #121621;
+      color: #e8eaf0;
+    }
+
+    body.dark .fc-toolbar,
+    body.dark .fc-toolbar h2 {
+      color: #e8eaf0;
+    }
+
+    body.dark .fc-button {
+      background: #1a1f2a;
+      border: 1px solid #2a3140;
+      color: #e8eaf0;
+      text-shadow: none;
+      box-shadow: none;
+    }
+
+    body.dark .fc-button:hover {
+      background: #232b3a;
+    }
+
+    body.dark .fc-state-active,
+    body.dark .fc-state-down {
+      background: #2a3140;
+    }
+
+    body.dark .fc-unthemed th,
+    body.dark .fc-unthemed td,
+    body.dark .fc-unthemed thead,
+    body.dark .fc-unthemed tbody,
+    body.dark .fc-unthemed .fc-divider,
+    body.dark .fc-unthemed .fc-row,
+    body.dark .fc-unthemed .fc-content,
+    body.dark .fc-unthemed .fc-popover {
+      border-color: #2a3140;
+    }
+
+    body.dark .fc-time-grid .fc-slats td,
+    body.dark .fc-axis {
+      color: #b7bdd0;
+    }
+
+    body.dark .fc-today {
+      background: rgba(80, 120, 255, 0.10) !important;
+    }
+
+    body.dark .fc-event,
+    body.dark .fc-event-dot {
+      border-color: #3b82f6;
+      background-color: #3b82f6;
+    }
+
+    body.dark .fc-event .fc-title,
+    body.dark .fc-event .fc-time {
+      color: #0f1115;
+    }
+
+    /* ===== HERO CLOCK ROW ===== */
+    .header-clock{
+      padding: 14px 10px 10px 10px;
+      text-align: center;
+    }
+
+    .clock-big{
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .date-big{
+      font-size: 16px;
+      opacity: 0.8;
+      margin-top: -4px;
+    }
+
+    .status-row{
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    @media (max-width: 900px){
+      .clock-big{ font-size: 48px; }
+      .date-big{ font-size: 14px; }
+    }
+
+    /* ✅ METEO INLINE (vertical-friendly) */
+    .weatherInline{
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      opacity: 0.92;
+    }
+    .weatherInline .wIco{
+      font-size: 24px;
+      line-height: 1;
+    }
+    .weatherInline .wTemp{
+      font-size: 22px;
+    }
+    .weatherInline .wHint{
+      font-size: 12px;
+      opacity: 0.65;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+
+    /* ===== OFFLINE OVERLAY ===== */
+    #offlineOverlay{
+      position: fixed;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: #000;
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #offlineOverlay.show{
+      display: flex;
+    }
+    .offlineWrap{
+      text-align: center;
+    }
+    .offlineClock{
+      font-size: 92px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    .offlineLabel{
+      margin-top: 12px;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      opacity: 0.45;
+      text-transform: uppercase;
+    }
+    @media (max-width: 900px){
+      .offlineClock{ font-size: 78px; }
+    }
+  </style>
+</head>
+
+<body class="dark">
+  <!-- ✅ OFFLINE OVERLAY -->
+  <div id="offlineOverlay">
+    <div class="offlineWrap">
+      <div class="offlineClock" id="offlineClock">--:--</div>
+      <div class="offlineLabel">PC OFFLINE</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="header header-clock">
+      <div class="clock-big" id="clock">--:--</div>
+      <div class="date-big" id="date">---</div>
+
+      <!-- ✅ METEO INLINE (Napoli) -->
+      <div class="weatherInline" id="weatherBox">
+        <span class="wIco" id="wIco">🌡️</span>
+        <span class="wTemp" id="wTemp">--°</span>
+        <span class="wHint" id="wHint">Napoli</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status" id="status">Pronto</span>
+        <span class="status" id="jsdiag">JS: non avviato</span>
+      </div>
+    </div>
+
+    <!-- ✅ RIGA: tasti (senza meteo laterale) -->
+    <div class="toprow">
+      <div class="tiles">
+        <button class="icon-btn" onclick="run('terminal_main')">
+          <img src="/static/icons/cdm.png" alt="">
+        </button>
+
+        <button class="icon-btn" onclick="run('vscode_mon2')">
+          <img src="/static/icons/vscode.png" alt="">
+        </button>
+
+        <button class="icon-btn" onclick="run('youtube_mon3')">
+          <img src="/static/icons/youtube.png" alt="">
+        </button>
+
+        <button class="icon-btn" onclick="run('discord_mon2')">
+          <img src="/static/icons/discord.png" alt="">
+        </button>
+
+        <!-- Controlli calendario (NON macro) -->
+        <button class="icon-btn" onclick="goToday()">
+          <img src="/static/icons/calendar.png" alt="">
+        </button>
+
+        <button class="icon-btn" onclick="refreshCal()">
+          <img src="/static/icons/refresh.png" alt="">
+        </button>
+      </div>
+    </div>
+
+    <!-- Calendario sotto -->
+    <div class="calendar-area">
+      <div id="calendar"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ES5 compatibile
+    function setText(id, text) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+    function pad(n) {
+      n = String(n);
+      return (n.length < 2) ? ("0" + n) : n;
+    }
+
+    setText('jsdiag', 'JS: avviato');
+
+    function tick() {
+      var now = new Date();
+      setText('clock', pad(now.getHours()) + ":" + pad(now.getMinutes()));
+      try {
+        setText('date', now.toLocaleDateString('it-IT', { weekday:'long', year:'numeric', month:'long', day:'numeric' }));
+      } catch (e) {
+        setText('date', now.toDateString());
+      }
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    // ✅ Ora anche nell'overlay offline
+    function tickOffline(){
+      var now = new Date();
+      setText('offlineClock', pad(now.getHours()) + ":" + pad(now.getMinutes()));
+    }
+    tickOffline();
+    setInterval(tickOffline, 1000);
+
+    // Macro call (XHR)
+    function run(name) {
+      setText('status', 'Eseguo: ' + name + '...');
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/run/' + encodeURIComponent(name), true);
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) setText('status', 'OK');
+          else setText('status', 'HTTP ' + xhr.status);
+        };
+        xhr.onerror = function() { setText('status', 'Errore rete'); };
+        xhr.send();
+      } catch (e) {
+        setText('status', 'Errore JS: ' + e.message);
+      }
+    }
+
+    // Meteo (solo icona + temperatura)
+    function weatherIconFromCode(code) {
+      if (code === 0) return "☀️";
+      if (code >= 1 && code <= 3) return "⛅";
+      if (code >= 45 && code <= 48) return "🌫️";
+      if (code >= 51 && code <= 67) return "🌧️";
+      if (code >= 71 && code <= 77) return "🌨️";
+      if (code >= 80 && code <= 82) return "🌦️";
+      if (code >= 95) return "⛈️";
+      return "🌡️";
+    }
+
+    function loadWeather(){
+      try{
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/api/weather", true);
+        xhr.onload = function(){
+          try{
+            var d = JSON.parse(xhr.responseText || "{}");
+            if (!d || d.temp == null){
+              setText("wTemp", "--°");
+              setText("wIco", "🌡️");
+              setText("wHint", "Napoli");
+              return;
+            }
+            setText("wTemp", Math.round(d.temp) + "°");
+            setText("wIco", weatherIconFromCode(d.code));
+            setText("wHint", (d.ok === false) ? "Napoli (cache)" : "Napoli");
+          }catch(e){
+            setText("wHint", "Meteo err");
+          }
+        };
+        xhr.onerror = function(){ setText("wHint", "Meteo rete"); };
+        xhr.send();
+      }catch(e){
+        setText("wHint", "Meteo JS");
+      }
+    }
+
+    // ===== OFFLINE MONITOR =====
+    var isOffline = false;
+
+    function showOffline(){
+      if (isOffline) return;
+      isOffline = true;
+      var o = document.getElementById('offlineOverlay');
+      if (o) o.className = 'show';
+    }
+
+    function hideOffline(){
+      if (!isOffline) return;
+      isOffline = false;
+      var o = document.getElementById('offlineOverlay');
+      if (o) o.className = '';
+    }
+
+    function pingHealth(){
+      try{
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/health?ts=' + new Date().getTime(), true);
+        xhr.timeout = 4000; // 4s
+        xhr.onload = function(){
+          if (xhr.status >= 200 && xhr.status < 300) hideOffline();
+          else showOffline();
+        };
+        xhr.ontimeout = function(){ showOffline(); };
+        xhr.onerror = function(){ showOffline(); };
+        xhr.send();
+      }catch(e){
+        showOffline();
+      }
+    }
+
+    function initCalendar() {
+      if (!window.jQuery || !jQuery.fn || !jQuery.fn.fullCalendar) {
+        setText('status', 'Calendario: librerie non caricate');
+        return;
+      }
+
+      jQuery('#calendar').fullCalendar({
+        locale: 'it',
+        height: 'parent',
+        defaultView: 'agendaWeek',
+        nowIndicator: true,
+        allDaySlot: true,
+        header: { left: 'prev,next today', center: 'title', right: 'month,agendaWeek,agendaDay' },
+
+        events: function(start, end, timezone, callback) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', '/api/events', true);
+          xhr.onload = function() {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              callback(data);
+              setText('status', 'Pronto');
+            } catch (e) {
+              setText('status', 'Calendario: JSON non valido');
+            }
+          };
+          xhr.onerror = function() { setText('status', 'Calendario: rete'); };
+          xhr.send();
+        },
+
+        eventClick: function(eventObj) {
+          var loc = '';
+          if (eventObj.extendedProps && eventObj.extendedProps.location) loc = eventObj.extendedProps.location;
+
+          var when = '';
+          try {
+            when = (eventObj.start ? eventObj.start.format('DD/MM HH:mm') : '') +
+                   (eventObj.end ? (' - ' + eventObj.end.format('HH:mm')) : '');
+          } catch(e) {}
+
+          alert(eventObj.title + (when ? "\n" + when : "") + (loc ? "\n" + loc : ""));
+        }
+      });
+
+      setTimeout(function () {
+        try { jQuery('#calendar').fullCalendar('render'); } catch(e) {}
+      }, 300);
+
+      window.onresize = function () {
+        try { jQuery('#calendar').fullCalendar('render'); } catch(e) {}
+      };
+
+      setInterval(function () {
+        try { jQuery('#calendar').fullCalendar('refetchEvents'); } catch(e) {}
+      }, 60000);
+    }
+
+    function goToday() {
+      if (window.jQuery && jQuery.fn && jQuery.fn.fullCalendar) {
+        jQuery('#calendar').fullCalendar('today');
+        try { jQuery('#calendar').fullCalendar('render'); } catch(e) {}
+      }
+    }
+
+    function refreshCal() {
+      if (window.jQuery && jQuery.fn && jQuery.fn.fullCalendar) {
+        jQuery('#calendar').fullCalendar('refetchEvents');
+        setText('status', 'Calendario aggiornato');
+        setTimeout(function () {
+          try { jQuery('#calendar').fullCalendar('render'); } catch(e) {}
+        }, 200);
+      }
+    }
+
+    // avvio
+    loadWeather();
+    setInterval(loadWeather, 10 * 60 * 1000); // ogni 10 minuti
+
+    // ping online/offline
+    pingHealth();
+    setInterval(pingHealth, 5000); // ogni 5 secondi
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCalendar);
+    } else {
+      initCalendar();
+    }
+  </script>
+</body>
+</html>
