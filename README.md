@@ -52,3 +52,24 @@ Il progetto utilizza un **server Flask** per esporre un'API RESTful che consente
 - Installa le librerie necessarie con:
   ```bash
   pip install Flask requests icalendar
+
+  Assicurati che AutoHotkey sia installato sul PC e che il percorso AHK_SCRIPT punti al file .ahk corretto.
+
+2. Impostazione del tablet
+
+Installa Fully Kiosk Browser sul tablet Android.
+
+Configura l'URL del server (ad esempio: http://IP_DEL_PC:5000) come pagina di avvio.
+
+Imposta il tablet in modalità kiosk per fare in modo che l'interfaccia non venga chiusa accidentalmente.
+
+3. Esecuzione del server
+
+Avvia il server Flask:
+
+python server.py
+4. Uso
+
+Una volta che il server è in esecuzione, apri l'interfaccia sul tablet.
+
+Premi i tasti per eseguire le macro sul PC, visualizzare il calendario e il meteo.
